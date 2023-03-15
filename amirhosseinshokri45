@@ -1,0 +1,96 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
+
+namespace SalesAnalyzer
+{
+    class SalesAnalyzer
+    {
+        
+        string path = @"Data/digikala.csv";
+
+
+        
+        public Dictionary<string, int> GetSalesByCity()
+        {
+            Dictionary<string, int> salesByCity = new Dictionary<string, int>();
+
+            
+            string query = "SELECT City, SUM(Amount) AS Sales FROM Sales GROUP BY City";
+
+            
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    
+                    connection.Open();
+
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        // Loop through the results and add them to the dictionary
+                        while (reader.Read())
+                        {
+                            string city = reader["City"].ToString();
+                            int sales = Convert.ToInt32(reader["Sales"]);
+                            salesByCity.Add(city, sales);
+                        }
+                    }
+                }
+            }
+
+            return salesByCity;
+        }
+
+        
+        public Dictionary<int, int> GetSalesByYear()
+        {
+            Dictionary<int, int> salesByYear = new Dictionary<int, int>();
+
+            
+            string query = "SELECT YEAR(Date) AS Year, SUM(Amount) AS Sales FROM Sales GROUP BY YEAR(Date)";
+
+            
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    
+                    connection.Open();
+
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        
+                        while (reader.Read())
+                        {
+                            int year = Convert.ToInt32(reader["Year"]);
+                            int sales = Convert.ToInt32(reader["Sales"]);
+                            salesByYear.Add(year, sales);
+                        }
+                    }
+                }
+            }
+
+            return salesByYear;
+        }
+
+        
+        public void SaveDataToFiles()
+        {
+            
+            Dictionary<string, int> salesByCity = GetSalesByCity();
+
+      
+            using (StreamWriter writer = new StreamWriter("SalesByCity.txt"))
+            {
+                foreach (KeyValuePair<string, int> kvp in salesByCity)
+                {
+                    writer.WriteLine($"{kvp.Key}: {kvp.Value}");
+                }
+            } 
